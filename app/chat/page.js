@@ -5,6 +5,26 @@ import AuthGuard from '../../components/AuthGuard';
 import Sidebar from '../../components/Sidebar';
 import { supabase } from '../../lib/supabaseClient';
 
+// Mismo sobre que el resto de las Edge Functions: { success, data, error, metadata }
+async function unwrapFunctionResponse(data, fnError) {
+  if (fnError) {
+    let message = fnError.message;
+    try {
+      if (fnError.context && typeof fnError.context.json === 'function') {
+        const body = await fnError.context.json();
+        if (body?.error?.message) message = body.error.message;
+      }
+    } catch {
+      // sin body legible
+    }
+    throw new Error(message);
+  }
+  if (data && data.success === false) {
+    throw new Error(data.error?.message || 'La función respondió con un error.');
+  }
+  return data?.data ?? data;
+}
+
 function ChatBody({ session }) {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Hola, soy el analista IA de Import AI. Pregunta por productos, proveedores o cálculos de importación.' }
@@ -26,18 +46,22 @@ function ChatBody({ session }) {
     setError(null);
 
     try {
+      // ai-router espera { prompt|message, context: [{role, content}], task_type?, preferred_provider? }
+      // El historial va en "context" (sin el mensaje actual, que ya va en "message").
+      const priorContext = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
+
       const { data, error: fnError } = await supabase.functions.invoke('ai-router', {
         body: {
-          user_id: session.user.id,
           message: text,
-          history: nextMessages.slice(-10)
+          context: priorContext,
+          task_type: 'general'
         }
       });
-      if (fnError) throw fnError;
-      const reply = data?.reply || data?.message || data?.content || JSON.stringify(data);
+      const payload = await unwrapFunctionResponse(data, fnError);
+      const reply = payload?.reply || payload?.text || payload?.message || 'Sin respuesta del modelo.';
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
-      setError(err.message || 'El router de IA no respondió. Revisa ai-router y AI_MODELS en Supabase.');
+      setError(err.message || 'El router de IA no respondió. Revisa que OPENAI_API_KEY esté en Edge Functions → Secrets.');
     } finally {
       setLoading(false);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
