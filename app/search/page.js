@@ -5,8 +5,32 @@ import AuthGuard from '../../components/AuthGuard';
 import Sidebar from '../../components/Sidebar';
 import { supabase } from '../../lib/supabaseClient';
 
+// Las Edge Functions de este proyecto devuelven siempre el mismo sobre:
+// { success, data, error: { code, message } | null, metadata }
+// Esta función lo desempaqueta y, si Supabase-js marcó error (status != 2xx),
+// intenta leer el mensaje real desde el body de la respuesta.
+async function unwrapFunctionResponse(data, fnError) {
+  if (fnError) {
+    let message = fnError.message;
+    try {
+      if (fnError.context && typeof fnError.context.json === 'function') {
+        const body = await fnError.context.json();
+        if (body?.error?.message) message = body.error.message;
+      }
+    } catch {
+      // sin body legible, nos quedamos con fnError.message
+    }
+    throw new Error(message);
+  }
+  if (data && data.success === false) {
+    throw new Error(data.error?.message || 'La función respondió con un error.');
+  }
+  return data?.data ?? data;
+}
+
 function SearchBody() {
   const [query, setQuery] = useState('');
+  const [source, setSource] = useState('aliexpress');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
@@ -20,15 +44,15 @@ function SearchBody() {
     setSearched(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke('search-products', {
-        body: { query }
+        body: { query, source }
       });
-      if (fnError) throw fnError;
-      const items = Array.isArray(data) ? data : data?.results || data?.products || [];
+      const payload = await unwrapFunctionResponse(data, fnError);
+      const items = Array.isArray(payload) ? payload : payload?.results || payload?.products || [];
       setResults(items);
     } catch (err) {
       setError(
         err.message ||
-          'No se pudo completar la búsqueda. Es probable que aún no haya conectores (RapidAPI) configurados en api_connectors.'
+          'No se pudo completar la búsqueda. Es probable que aún no haya un conector activo para esta plataforma en api_connectors.'
       );
       setResults([]);
     } finally {
@@ -40,11 +64,17 @@ function SearchBody() {
     <div className="flex-1 p-8">
       <h1 className="text-2xl font-bold mb-1">Buscador inteligente de productos</h1>
       <p className="text-white/40 text-sm mb-6">
-        Llama a la Edge Function <code className="text-accent2">search-products</code>, que despacha por los conectores activos en{' '}
-        <code>api_connectors</code>.
+        Llama a la Edge Function <code className="text-accent2">search-products</code>, que despacha por el conector activo
+        (tabla <code>api_connectors</code>, columna <code>name</code> = plataforma) vía <code>connector-execute</code>.
       </p>
 
       <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+        <select className="input w-40" value={source} onChange={(e) => setSource(e.target.value)}>
+          <option value="aliexpress">AliExpress</option>
+          <option value="1688">1688</option>
+          <option value="taobao">Taobao</option>
+          <option value="shein">SHEIN</option>
+        </select>
         <input
           className="input"
           placeholder="Ej: audífonos bluetooth"
