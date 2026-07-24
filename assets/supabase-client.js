@@ -31,7 +31,23 @@ export const EDGE_FUNCTIONS = {
 
 export async function callEdgeFunction(name, body = {}) {
   const { data, error } = await supabase.functions.invoke(name, { body });
-  if (error) throw error;
+  if (error) {
+    // Cuando la función responde 4xx/5xx (ej. límite de créditos excedido, prompt inválido),
+    // supabase-js solo da un error genérico de HTTP y el cuerpo real queda en error.context.
+    // Sin esto se pierde el mensaje real (código AI-002, AI-004, etc.) y en el chat se ve
+    // un error genérico en vez de "límite excedido".
+    if (error.context && typeof error.context.json === 'function') {
+      try {
+        const parsed = await error.context.json();
+        if (parsed?.error?.message) {
+          const e = new Error(parsed.error.message);
+          e.code = parsed.error.code;
+          throw e;
+        }
+      } catch (_) { /* si no se puede parsear el cuerpo, cae al error original */ }
+    }
+    throw error;
+  }
   return data;
 }
 
