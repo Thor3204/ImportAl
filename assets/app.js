@@ -291,9 +291,11 @@ async function ChatPage() {
     log.appendChild(pending);
     log.scrollTop = log.scrollHeight;
     try {
-      const data = await callEdgeFunction('ai-router', { message: text, user_id: session.user.id });
+      // ai-router espera { prompt } (no { message, user_id }: el user_id sale del JWT) y
+      // responde el sobre { success, data: { text, reply }, error, metadata }.
+      const res = await callEdgeFunction('ai-router', { prompt: text });
       pending.classList.remove('pending');
-      pending.textContent = data?.reply || data?.message || JSON.stringify(data);
+      pending.textContent = res?.data?.reply || res?.data?.text || 'El agente no devolvió una respuesta.';
     } catch (err) {
       pending.remove();
       log.appendChild(h(`<div class="msg assistant">No pude completar esa tarea (${err.message}). Intenta de nuevo o reformula la petición.</div>`));
