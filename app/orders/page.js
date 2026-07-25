@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
-import Sidebar from '../../components/Sidebar';
+import AppShell from '../../components/AppShell';
 import { supabase } from '../../lib/supabaseClient';
 
 const STATUS_FLOW = [
@@ -68,7 +68,7 @@ function NewOrderForm({ userId, onCreated }) {
       <h2 className="font-semibold">Nueva importación</h2>
       <input className="input" placeholder="Nombre del producto" value={productName} onChange={(e) => setProductName(e.target.value)} required />
       <input className="input" placeholder="URL del proveedor (opcional)" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <select className="input" value={sourcePlatform} onChange={(e) => setSourcePlatform(e.target.value)}>
           <option value="aliexpress">AliExpress</option>
           <option value="1688">1688</option>
@@ -124,7 +124,7 @@ function OrdersBody({ session }) {
   }
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-1">Mis importaciones</h1>
       <p className="text-white/40 text-sm mb-6">Datos reales de la tabla <code>import_orders</code> (RLS: solo ves las tuyas).</p>
 
@@ -191,10 +191,9 @@ export default function OrdersPage() {
   return (
     <AuthGuard>
       {(session) => (
-        <div className="flex">
-          <Sidebar userEmail={session.user.email} />
+        <AppShell userEmail={session.user.email}>
           <OrdersBody session={session} />
-        </div>
+        </AppShell>
       )}
     </AuthGuard>
   );

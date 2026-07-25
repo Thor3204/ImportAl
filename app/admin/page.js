@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
-import Sidebar from '../../components/Sidebar';
+import AppShell from '../../components/AppShell';
 import { supabase } from '../../lib/supabaseClient';
 
 const PLATFORM_PRESETS = [
@@ -191,11 +191,11 @@ function AdminBody({ session }) {
     setToggling(null);
   }
 
-  if (loading) return <div className="flex-1 p-8 text-white/40">Cargando…</div>;
+  if (loading) return <div className="flex-1 p-4 md:p-8 text-white/40">Cargando…</div>;
 
   if (role !== 'admin' && role !== 'super_admin') {
     return (
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4 md:p-8">
         <h1 className="text-2xl font-bold mb-2">Admin</h1>
         <p className="text-white/40">
           Tu rol actual (<code>{role}</code>) no tiene acceso al panel de administración.
@@ -205,7 +205,7 @@ function AdminBody({ session }) {
   }
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-1">Panel de administración</h1>
       <p className="text-white/40 text-sm mb-6">Usuarios, conectores y salud del sistema — datos reales.</p>
 
@@ -239,7 +239,8 @@ function AdminBody({ session }) {
               tu suscripción en RapidAPI, y el secret ya debe existir en Supabase → Edge Functions → Secrets.
             </p>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto -mx-5 px-5">
+            <table className="w-full text-sm min-w-[520px]">
               <thead className="text-white/40 text-left">
                 <tr>
                   <th className="pb-2">Nombre</th>
@@ -271,6 +272,7 @@ function AdminBody({ session }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -282,10 +284,9 @@ export default function AdminPage() {
   return (
     <AuthGuard>
       {(session) => (
-        <div className="flex">
-          <Sidebar userEmail={session.user.email} />
+        <AppShell userEmail={session.user.email}>
           <AdminBody session={session} />
-        </div>
+        </AppShell>
       )}
     </AuthGuard>
   );

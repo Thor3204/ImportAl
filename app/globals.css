@@ -2,28 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
 html, body {
-  background-color: #0a0a0f;
-  color: #eaeaf2;
+  background-color: #050505;
+  color: #f2f2f5;
+  overscroll-behavior-y: none;
 }
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* Glass card, Apple-style */
 .card {
-  background-color: #12121a;
-  border: 1px solid #242430;
-  border-radius: 14px;
+  background-color: rgba(20, 20, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .btn-primary {
-  background-color: #6d5efc;
+  background-color: #8B5CF6;
   color: white;
-  border-radius: 10px;
-  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  padding: 0.7rem 1.2rem;
   font-weight: 600;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
 }
 
 .btn-primary:hover {
@@ -36,17 +51,18 @@ html, body {
 }
 
 .input {
-  background-color: #0f0f16;
-  border: 1px solid #242430;
-  border-radius: 10px;
-  padding: 0.6rem 0.9rem;
-  color: #eaeaf2;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid #232326;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  color: #f2f2f5;
   width: 100%;
+  font-size: 16px; /* evita zoom automático en iOS */
 }
 
 .input:focus {
   outline: none;
-  border-color: #6d5efc;
+  border-color: #8B5CF6;
 }
 
 .badge {
@@ -56,4 +72,22 @@ html, body {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* Scrollbars discretos */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #232326;
+  border-radius: 999px;
+}
+
+/* Utilidades de safe-area para PWA / notch */
+.pt-safe {
+  padding-top: var(--safe-top);
+}
+.pb-safe {
+  padding-bottom: var(--safe-bottom);
 }

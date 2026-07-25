@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
-import Sidebar from '../../components/Sidebar';
+import AppShell from '../../components/AppShell';
 import { supabase } from '../../lib/supabaseClient';
 
 // Las Edge Functions de este proyecto devuelven siempre el mismo sobre:
@@ -61,15 +61,15 @@ function SearchBody() {
   }
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-1">Buscador inteligente de productos</h1>
       <p className="text-white/40 text-sm mb-6">
         Llama a la Edge Function <code className="text-accent2">search-products</code>, que despacha por el conector activo
         (tabla <code>api_connectors</code>, columna <code>name</code> = plataforma) vía <code>connector-execute</code>.
       </p>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
-        <select className="input w-40" value={source} onChange={(e) => setSource(e.target.value)}>
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
+        <select className="input sm:w-40" value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="aliexpress">AliExpress</option>
           <option value="1688">1688</option>
           <option value="taobao">Taobao</option>
@@ -124,10 +124,9 @@ export default function SearchPage() {
   return (
     <AuthGuard>
       {(session) => (
-        <div className="flex">
-          <Sidebar userEmail={session.user.email} />
+        <AppShell userEmail={session.user.email}>
           <SearchBody />
-        </div>
+        </AppShell>
       )}
     </AuthGuard>
   );

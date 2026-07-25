@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
-import Sidebar from '../../components/Sidebar';
+import AppShell from '../../components/AppShell';
 import { supabase } from '../../lib/supabaseClient';
 
 function StatCard({ label, value, sub }) {
@@ -63,7 +63,7 @@ function DashboardBody({ session }) {
   }, [session.user.id]);
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
       <p className="text-white/40 text-sm mb-6">Resumen de tu cuenta en Import AI, conectado en vivo a Supabase.</p>
 
@@ -132,10 +132,9 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       {(session) => (
-        <div className="flex">
-          <Sidebar userEmail={session.user.email} />
+        <AppShell userEmail={session.user.email}>
           <DashboardBody session={session} />
-        </div>
+        </AppShell>
       )}
     </AuthGuard>
   );

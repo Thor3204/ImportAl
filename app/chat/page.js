@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
-import Sidebar from '../../components/Sidebar';
+import AppShell from '../../components/AppShell';
 import { supabase } from '../../lib/supabaseClient';
 
 // Mismo sobre que el resto de las Edge Functions: { success, data, error, metadata }
@@ -61,7 +61,7 @@ function ChatBody({ session }) {
       const reply = payload?.reply || payload?.text || payload?.message || 'Sin respuesta del modelo.';
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
-      setError(err.message || 'El router de IA no respondió. Revisa que OPENAI_API_KEY esté en Edge Functions → Secrets.');
+      setError(err.message || 'El router de IA no respondió. Revisa que GEMINI_API_KEY esté en Edge Functions → Secrets.');
     } finally {
       setLoading(false);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
@@ -69,7 +69,7 @@ function ChatBody({ session }) {
   }
 
   return (
-    <div className="flex-1 p-8 flex flex-col h-screen">
+    <div className="flex-1 p-4 md:p-8 flex flex-col h-[100dvh] md:h-screen">
       <h1 className="text-2xl font-bold mb-1">Chat IA</h1>
       <p className="text-white/40 text-sm mb-6">Conectado a la Edge Function <code className="text-accent2">ai-router</code>.</p>
 
@@ -109,10 +109,9 @@ export default function ChatPage() {
   return (
     <AuthGuard>
       {(session) => (
-        <div className="flex">
-          <Sidebar userEmail={session.user.email} />
+        <AppShell userEmail={session.user.email}>
           <ChatBody session={session} />
-        </div>
+        </AppShell>
       )}
     </AuthGuard>
   );
